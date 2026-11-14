@@ -14,8 +14,8 @@ const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://ollama:11434";
 const EMBED_MODEL = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text";
 
 /**
- * Berechnet einen kompakten lokalen Fallback-Vektor (64 Dimensionen) über Wort-/Zeichen-Trigramme,
- * falls in Ollama noch kein Embedding-Modell geladen wurde.
+ * Computes a compact local fallback vector (64 dimensions) using word and character trigrams
+ * when no dedicated embedding model is loaded in Ollama yet.
  */
 function computeLocalFallbackVector(text: string, dims = 64): number[] {
   const vec = new Array(dims).fill(0);
@@ -31,7 +31,7 @@ function computeLocalFallbackVector(text: string, dims = 64): number[] {
     const idx = Math.abs(hash) % dims;
     vec[idx] += 1;
 
-    // Zeichen-Trigramme für Teilwort-Ähnlichkeit
+    // Character trigrams for sub-word similarity
     for (let i = 0; i <= word.length - 3; i++) {
       const tri = word.slice(i, i + 3);
       let thash = 0;
@@ -47,7 +47,7 @@ function computeLocalFallbackVector(text: string, dims = 64): number[] {
 }
 
 /**
- * Erzeugt einen Vektor über Ollama (/api/embed) oder nutzt den lokalen Fallback-Vektor.
+ * Generates an embedding vector via Ollama (/api/embed) or falls back to the local vector computation.
  */
 export async function embedText(text: string): Promise<number[]> {
   try {
@@ -63,13 +63,13 @@ export async function embedText(text: string): Promise<number[]> {
       }
     }
   } catch {
-    // Fallback auf lokalen Vektor, falls Ollama oder nomic-embed-text nicht aktiv ist
+    // Fallback to local deterministic vector if Ollama or nomic-embed-text is unavailable
   }
   return computeLocalFallbackVector(text);
 }
 
 /**
- * Cosine Similarity zwischen zwei Vektoren.
+ * Computes Cosine Similarity between two numeric vectors.
  */
 export function cosineSimilarity(a: number[], b: number[]): number {
   const len = Math.min(a.length, b.length);
@@ -86,8 +86,8 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 }
 
 /**
- * Liest alle .md und .txt Dateien aus `knowledge/`, teilt sie in Abschnitte
- * und speichert die Vektoren in `knowledge/vectors.json`.
+ * Reads all .md and .txt files from `knowledge/`, splits them into chunks,
+ * and persists the resulting vectors to `knowledge/vectors.json`.
  */
 export async function rebuildVectorStore(): Promise<VectorEntry[]> {
   await fs.mkdir(KNOWLEDGE_DIR, { recursive: true });
@@ -101,7 +101,7 @@ export async function rebuildVectorStore(): Promise<VectorEntry[]> {
   for (const file of docFiles) {
     const fullPath = path.join(KNOWLEDGE_DIR, file);
     const content = await fs.readFile(fullPath, "utf-8");
-    // Teile nach Überschriften oder doppelten Zeilenumbrüchen
+    // Split by markdown headings or double newlines
     const rawChunks = content
       .split(/\n(?=#{1,3}\s)|\n\s*\n/)
       .map((c) => c.trim())
@@ -124,7 +124,7 @@ export async function rebuildVectorStore(): Promise<VectorEntry[]> {
 }
 
 /**
- * Lädt `knowledge/vectors.json` (oder erstellt sie beim ersten Aufruf).
+ * Loads `knowledge/vectors.json` from disk (or builds it on first access).
  */
 export async function loadVectorStore(): Promise<VectorEntry[]> {
   try {
@@ -136,7 +136,7 @@ export async function loadVectorStore(): Promise<VectorEntry[]> {
 }
 
 /**
- * Sucht die Top-K ähnlichsten Textabschnitte zur Nutzerfrage.
+ * Retrieves the top-K most relevant text chunks for a given user query.
  */
 export async function retrieveRelevantChunks(
   query: string,

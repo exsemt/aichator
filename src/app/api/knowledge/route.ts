@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const title = (body.title || "notiz.md").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const title = (body.title || "notes.md").replace(/[^a-zA-Z0-9_-]/g, "_");
   const content = (body.content || "").trim();
 
   if (content) {

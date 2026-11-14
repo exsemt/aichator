@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "aichator – Next.js Multi-LLM & RAG",
-  description: "aichator Chat-Frontend für Antigravity, Claude und lokale LLMs (Ollama)",
+  description: "Multi-LLM chat frontend for Antigravity, Claude, and local LLMs (Ollama) with file-based RAG",
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de">
+    <html lang="en">
       <body className="bg-slate-950 text-slate-100 antialiased">{children}</body>
     </html>
   );

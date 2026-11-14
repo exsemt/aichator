@@ -17,7 +17,7 @@ export async function* streamClaude(
   messages: ChatMessage[]
 ): AsyncGenerator<string, void, unknown> {
   if (!ANTHROPIC_API_KEY) {
-    yield "⚠️ Bitte setze `ANTHROPIC_API_KEY` in deiner `.env`-Datei oder `docker-compose.yml`, um Claude zu nutzen.";
+    yield "⚠️ Please set `ANTHROPIC_API_KEY` in your `.env` file or `docker-compose.yml` to use Claude.";
     return;
   }
 
@@ -52,7 +52,7 @@ export async function* streamAntigravity(
         body: JSON.stringify({ messages }),
       });
       if (!res.ok || !res.body) {
-        yield `⚠️ Antigravity-Endpunkt antwortete mit Status ${res.status}.`;
+        yield `⚠️ Antigravity endpoint responded with status ${res.status}.`;
         return;
       }
       const reader = res.body.getReader();
@@ -64,12 +64,12 @@ export async function* streamAntigravity(
       }
       return;
     } catch (err) {
-      yield `⚠️ Fehler beim Aufruf von ANTIGRAVITY_API_URL: ${String(err)}`;
+      yield `⚠️ Failed to reach ANTIGRAVITY_API_URL: ${String(err)}`;
       return;
     }
   }
 
-  // Fallback: Lokales `agy` CLI aufrufen, falls im Container/Host installiert
+  // Fallback: invoke local `agy` CLI if installed in the container or host
   try {
     const child = spawn("agy", ["chat", "--prompt", prompt]);
     let hasOutput = false;
@@ -80,10 +80,10 @@ export async function* streamAntigravity(
     }
 
     if (!hasOutput) {
-      yield "ℹ️ Antigravity-Modus aktiv. Verbinde entweder das `agy` CLI im Container oder setze `ANTIGRAVITY_API_URL` auf deinen Antigravity-Agent-Service.";
+      yield "ℹ️ Antigravity mode active. Mount the `agy` CLI inside the container or set `ANTIGRAVITY_API_URL` to your Antigravity agent service.";
     }
   } catch {
-    yield "ℹ️ Um Antigravity im Docker-Container zu nutzen, binde das `agy` Binary ein oder setze `ANTIGRAVITY_API_URL` in der `docker-compose.yml`.";
+    yield "ℹ️ To use Antigravity inside Docker, mount the `agy` binary or configure `ANTIGRAVITY_API_URL` in `docker-compose.yml`.";
   }
 }
 
@@ -106,7 +106,7 @@ export async function* streamLocalOllama(
     });
 
     if (!response.ok || !response.body) {
-      yield `⚠️ Ollama antwortete mit Status ${response.status}. Stelle sicher, dass das Modell \`${targetModel}\` geladen ist (\`docker exec -it aichat-ollama ollama run ${targetModel}\`).`;
+      yield `⚠️ Ollama responded with status ${response.status}. Ensure the model \`${targetModel}\` is pulled (\`docker exec -it aichator-ollama ollama run ${targetModel}\`).`;
       return;
     }
 
@@ -129,7 +129,7 @@ export async function* streamLocalOllama(
       }
     }
   } catch (err) {
-    yield `⚠️ Keine Verbindung zu Ollama unter \`${OLLAMA_BASE_URL}\` (${String(
+    yield `⚠️ Could not connect to Ollama at \`${OLLAMA_BASE_URL}\` (${String(
       err
     )}).`;
   }

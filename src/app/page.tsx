@@ -28,7 +28,7 @@ interface KnowledgeEntryPreview {
 const PROVIDERS: { id: ProviderId; label: string; subtitle: string }[] = [
   { id: "antigravity", label: "Antigravity", subtitle: "Google AGY" },
   { id: "claude", label: "Claude", subtitle: "Anthropic Cloud" },
-  { id: "local", label: "Lokales LLM (Ollama)", subtitle: "Ollama Container" },
+  { id: "local", label: "Local LLM (Ollama)", subtitle: "Ollama Container" },
 ];
 
 export default function ChatPage() {
@@ -44,7 +44,7 @@ export default function ChatPage() {
     {
       role: "assistant",
       content:
-        "Hallo! Du kannst oben das Modell wählen (Lokales Ollama-Modell, eigenes Ollama-Modelfile `aichat-custom`, Claude oder Antigravity) und per Schalter **📚 RAG (Vektorsuche)** dein eigenes Wissen aus `knowledge/vectors.json` dazuschalten.",
+        "Hello! Select your preferred model above (custom `aichator` Ollama profile, standard Ollama models, Claude, or Antigravity) and toggle **📚 RAG** to include your custom knowledge from `knowledge/vectors.json`.",
       provider: "local",
     },
   ]);
@@ -64,7 +64,7 @@ export default function ChatPage() {
         setKnowledgeEntries(data.entries || []);
       }
     } catch {
-      // ignore
+      // Ignore initial fetch errors
     }
   }
 
@@ -81,7 +81,7 @@ export default function ChatPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "firmenwissen.md",
+          title: "custom_notes.md",
           content: newNote.trim(),
         }),
       });
@@ -118,7 +118,7 @@ export default function ChatPage() {
         }),
       });
 
-      if (!response.body) throw new Error("Kein Stream vom Server erhalten.");
+      if (!response.body) throw new Error("No response stream received from server.");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -165,7 +165,7 @@ export default function ChatPage() {
         const copy = [...prev];
         copy[copy.length - 1] = {
           role: "assistant",
-          content: `Fehler bei der Anfrage: ${String(err)}`,
+          content: `Request error: ${String(err)}`,
           provider,
         };
         return copy;
@@ -181,12 +181,12 @@ export default function ChatPage() {
         <div>
           <h1 className="text-xl font-semibold text-white">aichator</h1>
           <p className="text-xs text-slate-400">
-            Next.js + TypeScript · Minimales RAG & Ollama in Docker
+            Next.js 15 + TypeScript · Minimal RAG & Ollama in Docker
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Provider Auswahl */}
+          {/* Provider selector */}
           <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
             {PROVIDERS.map((p) => (
               <button
@@ -204,7 +204,7 @@ export default function ChatPage() {
             ))}
           </div>
 
-          {/* Ollama Modell-Auswahl inkl. Modelfile-Variante */}
+          {/* Ollama model selector including custom Modelfile profile */}
           {provider === "local" && (
             <select
               value={localModel}
@@ -212,9 +212,9 @@ export default function ChatPage() {
               className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
             >
               <option value="aichator">
-                aichator (Ollama Modelfile mit xsatz.de Wissen)
+                aichator (Ollama Modelfile with xsatz.de knowledge)
               </option>
-              <option value="llama3.2:1b">llama3.2:1b (~1.3 GB Standard)</option>
+              <option value="llama3.2:1b">llama3.2:1b (~1.3 GB default)</option>
               <option value="aichat-custom">
                 aichat-custom (Ollama Modelfile)
               </option>
@@ -223,7 +223,7 @@ export default function ChatPage() {
             </select>
           )}
 
-          {/* RAG Toggle */}
+          {/* RAG toggle */}
           <button
             type="button"
             onClick={() => setUseRag((v) => !v)}
@@ -233,30 +233,30 @@ export default function ChatPage() {
                 : "bg-slate-900 border-slate-800 text-slate-400"
             }`}
           >
-            📚 RAG: {useRag ? "AN" : "AUS"}
+            📚 RAG: {useRag ? "ON" : "OFF"}
           </button>
 
-          {/* Wissens-Panel Toggle */}
+          {/* Knowledge base panel toggle */}
           <button
             type="button"
             onClick={() => setShowKnowledgePanel((v) => !v)}
             className="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 border border-slate-700 text-slate-200 hover:border-indigo-500 transition"
           >
-            🗂️ Vektoren ({knowledgeEntries.length})
+            🗂️ Vectors ({knowledgeEntries.length})
           </button>
         </div>
       </header>
 
-      {/* Aufklappbares Wissens- & Vektor-Panel */}
+      {/* Collapsible knowledge base and vector store inspector panel */}
       {showKnowledgePanel && (
         <section className="my-3 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 text-xs">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-slate-100">
-                Lokale Vektordatei: <code>knowledge/vectors.json</code>
+                Local Vector Store: <code>knowledge/vectors.json</code>
               </h2>
               <p className="text-slate-400">
-                Jeder Abschnitt aus <code>knowledge/*.md</code> wird mit seinem Zahlen-Vektor lokal als JSON gespeichert.
+                Every chunk from <code>knowledge/*.md</code> is stored locally as JSON alongside its numeric embedding vector.
               </p>
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function ChatPage() {
                 <div className="flex items-center justify-between text-[11px] text-indigo-400 font-mono">
                   <span>{item.id}</span>
                   <span>
-                    Vektor ({item.dimensions}D): [{item.vectorPreview.join(", ")}, …]
+                    Vector ({item.dimensions}D): [{item.vectorPreview.join(", ")}, …]
                   </span>
                 </div>
                 <p className="text-slate-300 line-clamp-2">{item.text}</p>
@@ -283,7 +283,7 @@ export default function ChatPage() {
               type="text"
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Neues Wissen hinzufügen (z.B. 'Unser WLAN-Passwort im Büro heißt Sonne2026')..."
+              placeholder="Add new knowledge chunk to vector store..."
               className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
             />
             <button
@@ -291,13 +291,13 @@ export default function ChatPage() {
               disabled={isSavingNote || !newNote.trim()}
               className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-xl text-xs transition"
             >
-              {isSavingNote ? "Speichert…" : "+ In Vektordatei speichern"}
+              {isSavingNote ? "Saving…" : "+ Save to Vector Store"}
             </button>
           </form>
         </section>
       )}
 
-      {/* Chat-Verlauf */}
+      {/* Chat message history */}
       <main className="flex-1 overflow-y-auto py-4 space-y-4">
         {messages.map((msg, idx) => (
           <div
@@ -318,7 +318,7 @@ export default function ChatPage() {
                   <span>{msg.provider}</span>
                   {msg.ragSources && msg.ragSources.length > 0 && (
                     <span className="text-emerald-400">
-                      · 📚 {msg.ragSources.length} RAG-Treffer aus vectors.json
+                      · 📚 {msg.ragSources.length} RAG matches from vectors.json
                     </span>
                   )}
                 </div>
@@ -328,7 +328,7 @@ export default function ChatPage() {
               {msg.ragSources && msg.ragSources.length > 0 && (
                 <details className="mt-2 pt-2 border-t border-slate-800 text-xs text-slate-400">
                   <summary className="cursor-pointer hover:text-slate-200">
-                    Gefundene Wissens-Vektoren anzeigen
+                    Show matched knowledge vectors
                   </summary>
                   <div className="mt-1.5 space-y-1">
                     {msg.ragSources.map((s) => (
@@ -359,7 +359,7 @@ export default function ChatPage() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Frage stellen (z.B. 'Wie lautet der Projekt-Codename oder unsere Rückgabefrist?')..."
+          placeholder="Ask a question (e.g., 'What are the pricing tiers of xsatz.de?')..."
           className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
         />
         <button
@@ -367,7 +367,7 @@ export default function ChatPage() {
           disabled={isStreaming || !input.trim()}
           className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium px-5 py-3 rounded-xl text-sm transition"
         >
-          {isStreaming ? "Sendet…" : "Senden"}
+          {isStreaming ? "Sending…" : "Send"}
         </button>
       </form>
     </div>

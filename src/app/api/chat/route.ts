@@ -32,12 +32,12 @@ export async function POST(req: NextRequest) {
 
     if (hits.length > 0) {
       const contextBlock = hits
-        .map((h) => `[Quelle: ${h.entry.id}]\n${h.entry.text}`)
+        .map((h) => `[Source: ${h.entry.id}]\n${h.entry.text}`)
         .join("\n\n");
 
       enrichedMessages[lastIdx] = {
         role: "user",
-        content: `Nutze folgendes eigenes Wissen aus unserer lokalen Vektordatei (knowledge/vectors.json), um die Frage präzise auf Deutsch zu beantworten:\n\n${contextBlock}\n\nFrage: ${userQuestion}`,
+        content: `Use the following knowledge retrieved from our local vector store (knowledge/vectors.json) to answer the question accurately:\n\n${contextBlock}\n\nQuestion: ${userQuestion}`,
       };
     }
   }
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({
-              token: `\n⚠️ Serverfehler: ${String(err)}`,
+              token: `\n⚠️ Server error: ${String(err)}`,
             })}\n\n`
           )
         );
