@@ -4,7 +4,7 @@ import { spawn } from "child_process";
 export type ProviderId = "antigravity" | "claude" | "local";
 
 export interface ChatMessage {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
@@ -21,11 +21,22 @@ export async function* streamClaude(
     return;
   }
 
+  const systemMessages = messages
+    .filter((m) => m.role === "system")
+    .map((m) => m.content)
+    .join("\n\n");
+
+  const conversationMessages = messages
+    .filter((m): m is { role: "user" | "assistant"; content: string } =>
+      m.role === "user" || m.role === "assistant"
+    );
+
   const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
   const stream = await client.messages.stream({
     model: CLAUDE_MODEL,
     max_tokens: 2048,
-    messages,
+    system: systemMessages || undefined,
+    messages: conversationMessages,
   });
 
   for await (const event of stream) {
