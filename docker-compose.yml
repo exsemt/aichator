@@ -17,7 +17,9 @@ services:
       - ANTIGRAVITY_API_URL=${ANTIGRAVITY_API_URL:-}
     volumes:
       - ./src:/app/src
+      - ./scripts:/app/scripts
       - ./knowledge:/app/knowledge
+      - ./package.json:/app/package.json
       - ./next.config.mjs:/app/next.config.mjs
       - ./tailwind.config.ts:/app/tailwind.config.ts
       - ./postcss.config.mjs:/app/postcss.config.mjs

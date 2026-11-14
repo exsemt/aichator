@@ -97,6 +97,23 @@ export default function ChatPage() {
     }
   }
 
+  async function handleRebuildVectors() {
+    setIsSavingNote(true);
+    try {
+      const res = await fetch("/api/knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: "" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setKnowledgeEntries(data.entries || []);
+      }
+    } finally {
+      setIsSavingNote(false);
+    }
+  }
+
   useEffect(() => {
     fetchKnowledge();
   }, []);
@@ -293,6 +310,14 @@ export default function ChatPage() {
                 Every chunk from <code>knowledge/*.md</code> is stored locally as JSON alongside its numeric embedding vector.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={handleRebuildVectors}
+              disabled={isSavingNote}
+              className="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 border border-slate-700 transition"
+            >
+              🔄 Rebuild Vectors
+            </button>
           </div>
 
           <div className="grid gap-2 max-h-44 overflow-y-auto pr-1">

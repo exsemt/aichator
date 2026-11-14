@@ -27,6 +27,7 @@ This file provides context, architectural rules, and workflow instructions for a
 - `src/app/api/knowledge/route.ts` – REST endpoint (`GET` / `POST`) to inspect `knowledge/vectors.json` and append new knowledge notes from the UI.
 - `src/lib/providers.ts` – Streaming adapters for Ollama, Claude, and Antigravity.
 - `src/lib/rag.ts` – Chunking, vector embedding, `knowledge/vectors.json` persistence, and Cosine Similarity search.
+- `scripts/generate-vectors.mjs` – Standalone CLI script (`npm run generate-vectors`) to rebuild `knowledge/vectors.json` from `knowledge/*.md` and `knowledge/*.txt`.
 - `knowledge/` – Domain knowledge files (`xsatz_*.md`), Ollama `Modelfile`, and generated `vectors.json`.
 - `Dockerfile` – 3-stage production build using `node:24-alpine` and Next.js `standalone` output.
 - `docker-compose.yml` – Orchestrates `aichator-web` (port `3000`) and `aichator-ollama` (port `11434`).
@@ -51,4 +52,10 @@ This file provides context, architectural rules, and workflow instructions for a
   ```bash
   docker exec aichator-ollama ollama pull llama3.2:1b
   docker exec aichator-ollama ollama create aichator -f /knowledge/Modelfile
+  ```
+- Rebuild the local RAG vector store (`knowledge/vectors.json`) after modifying files in `knowledge/`:
+  ```bash
+  npm run generate-vectors
+  # or via Docker:
+  docker exec aichator-web npm run generate-vectors
   ```
