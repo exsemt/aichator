@@ -81,7 +81,9 @@ export async function* streamAntigravity(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...(systemText
-            ? { systemInstruction: { parts: [{ text: systemText }] } }
+            ? {
+                system_instruction: { parts: [{ text: systemText }] },
+              }
             : {}),
           contents,
         }),

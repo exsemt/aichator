@@ -101,11 +101,11 @@ export async function rebuildVectorStore(): Promise<VectorEntry[]> {
   for (const file of docFiles) {
     const fullPath = path.join(KNOWLEDGE_DIR, file);
     const content = await fs.readFile(fullPath, "utf-8");
-    // Split by markdown headings or double newlines
+    // Split by level-2 markdown headings (## ) and filter out standalone title lines
     const rawChunks = content
-      .split(/\n(?=#{1,3}\s)|\n\s*\n/)
+      .split(/\n(?=##\s)/)
       .map((c) => c.trim())
-      .filter((c) => c.length > 15);
+      .filter((c) => c.length > 90);
 
     for (let i = 0; i < rawChunks.length; i++) {
       const chunk = rawChunks[i];
@@ -135,21 +135,63 @@ export async function loadVectorStore(): Promise<VectorEntry[]> {
   }
 }
 
+const SYNONYM_EXPANSIONS: Record<string, string[]> = {
+  kosten: ["preise", "tarife", "gebühren", "euro", "monat", "kostenlos", "free", "pro", "business"],
+  kostet: ["preise", "tarife", "gebühren", "euro", "monat", "kostenlos", "free", "pro", "business"],
+  preis: ["preise", "tarife", "kosten", "euro", "monat", "free", "pro", "business"],
+  preise: ["tarife", "kosten", "euro", "monat", "free", "pro", "business"],
+  tarif: ["tarife", "preise", "kosten", "free", "pro", "business"],
+  was: ["übersicht", "allgemeine", "beschreibung", "kernfunktionen", "plattform"],
+  wer: ["übersicht", "allgemeine", "beschreibung", "anbieter"],
+  funktion: ["kernfunktionen", "übersicht", "features", "validierung"],
+  funktionen: ["kernfunktionen", "übersicht", "features", "validierung"],
+};
+
 /**
- * Retrieves the top-K most relevant text chunks for a given user query.
+ * Retrieves the top-K most relevant text chunks for a given user query
+ * using hybrid scoring (Cosine Similarity + keyword/synonym matching).
  */
 export async function retrieveRelevantChunks(
   query: string,
-  topK = 3
+  topK = 4
 ): Promise<{ entry: VectorEntry; score: number }[]> {
   const store = await loadVectorStore();
   if (store.length === 0) return [];
 
   const queryVec = await embedText(query);
-  const scored = store.map((entry) => ({
-    entry,
-    score: cosineSimilarity(queryVec, entry.vector),
-  }));
+  const queryWords = query
+    .toLowerCase()
+    .replace(/[^a-z0-9äöüß\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 2);
+
+  const expandedKeywords = new Set<string>(queryWords);
+  for (const w of queryWords) {
+    const syns = SYNONYM_EXPANSIONS[w];
+    if (syns) {
+      for (const s of syns) expandedKeywords.add(s);
+    }
+  }
+
+  const scored = store.map((entry) => {
+    const cosine = cosineSimilarity(queryVec, entry.vector);
+    const hay = `${entry.file} ${entry.text}`.toLowerCase();
+
+    let keywordBoost = 0;
+    for (const kw of expandedKeywords) {
+      if (hay.includes(kw)) {
+        keywordBoost += queryWords.includes(kw) ? 0.12 : 0.08;
+      }
+    }
+
+    // Prefer substantive paragraphs over short headers
+    const lengthBonus = entry.text.length > 120 ? 0.05 : -0.15;
+
+    return {
+      entry,
+      score: cosine + keywordBoost + lengthBonus,
+    };
+  });
 
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, topK);

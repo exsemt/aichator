@@ -1,7 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const KNOWLEDGE_DIR = path.join(process.cwd(), "knowledge");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const KNOWLEDGE_DIR = path.resolve(__dirname, "..", "knowledge");
 const VECTORS_FILE = path.join(KNOWLEDGE_DIR, "vectors.json");
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 const EMBED_MODEL = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text";
@@ -65,9 +67,9 @@ async function main() {
     const fullPath = path.join(KNOWLEDGE_DIR, file);
     const content = await fs.readFile(fullPath, "utf-8");
     const rawChunks = content
-      .split(/\n(?=#{1,3}\s)|\n\s*\n/)
+      .split(/\n(?=##\s)/)
       .map((c) => c.trim())
-      .filter((c) => c.length > 15);
+      .filter((c) => c.length > 90);
 
     for (let i = 0; i < rawChunks.length; i++) {
       const chunk = rawChunks[i];

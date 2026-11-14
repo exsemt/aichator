@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (useRag && enrichedMessages.length > 0) {
     const lastIdx = enrichedMessages.length - 1;
     const userQuestion = enrichedMessages[lastIdx].content;
-    const hits = await retrieveRelevantChunks(userQuestion, 2);
+    const hits = await retrieveRelevantChunks(userQuestion, 4);
     ragSources = hits.map((h) => ({
       id: h.entry.id,
       text: h.entry.text,
@@ -31,13 +31,13 @@ export async function POST(req: NextRequest) {
     }));
 
     if (hits.length > 0) {
-      const contextBlock = hits.map((h) => h.entry.text).join("\n\n");
+      const contextBlock = hits.map((h) => h.entry.text).join("\n\n---\n\n");
 
       // Insert RAG context as a system message so the model answers naturally
       // without echoing internal filenames or dumping unrelated sections.
       enrichedMessages.splice(lastIdx, 0, {
         role: "system",
-        content: `Answer ONLY the user's question concisely and naturally in the same language as the user, using only the relevant facts from the reference notes below. Do NOT mention internal filenames, sources, or vector stores, and do NOT list pricing or privacy details unless the user specifically asks for them.\n\nReference notes:\n${contextBlock}`,
+        content: `Answer the user's question concisely and naturally in the same language as the user, using the relevant facts from the reference notes below. Do NOT mention internal filenames or vector stores.\n\nReference notes:\n${contextBlock}`,
       });
     }
   }
