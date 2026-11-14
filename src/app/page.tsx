@@ -15,6 +15,7 @@ interface Message {
   content: string;
   provider?: ProviderId;
   ragSources?: RagSource[];
+  isWelcome?: boolean;
 }
 
 interface KnowledgeEntryPreview {
@@ -31,6 +32,33 @@ const PROVIDERS: { id: ProviderId; label: string; subtitle: string }[] = [
   { id: "local", label: "Local LLM (Ollama)", subtitle: "Ollama Container" },
 ];
 
+/**
+ * Lightweight inline Markdown formatter for bold (**text**) and inline code (`code`).
+ */
+function renderInlineMarkdown(text: string): React.ReactNode[] {
+  const tokens = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return tokens.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return (
+        <strong key={i} className="font-semibold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
+      return (
+        <code
+          key={i}
+          className="px-1.5 py-0.5 rounded bg-slate-800 text-indigo-300 font-mono text-xs"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+}
+
 export default function ChatPage() {
   const [provider, setProvider] = useState<ProviderId>("local");
   const [localModel, setLocalModel] = useState("aichator");
@@ -44,8 +72,9 @@ export default function ChatPage() {
     {
       role: "assistant",
       content:
-        "Hello! Select your preferred model above (custom `aichator` Ollama profile, standard Ollama models, Claude, or Antigravity) and toggle **📚 RAG** to include your custom knowledge from `knowledge/vectors.json`.",
+        "Hello! Select your preferred model above (`aichator`, standard Ollama models, Claude, or Antigravity) and toggle **📚 RAG** to include your custom knowledge from `knowledge/vectors.json`.",
       provider: "local",
+      isWelcome: true,
     },
   ]);
   const [input, setInput] = useState("");
@@ -106,6 +135,11 @@ export default function ChatPage() {
     setInput("");
     setIsStreaming(true);
 
+    // Exclude the static UI welcome message so it does not pollute the LLM context
+    const apiMessages = updated
+      .filter((m) => !m.isWelcome && m.content.trim().length > 0)
+      .map(({ role, content }) => ({ role, content }));
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -114,7 +148,7 @@ export default function ChatPage() {
           provider,
           model: provider === "local" ? localModel : undefined,
           useRag,
-          messages: updated.map(({ role, content }) => ({ role, content })),
+          messages: apiMessages,
         }),
       });
 
@@ -298,7 +332,7 @@ export default function ChatPage() {
       )}
 
       {/* Chat message history */}
-      <main className="flex-1 overflow-y-auto py-4 space-y-4">
+      <main className="flex-1 overflow-y-auto py-4 pr-1 space-y-4">
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -318,12 +352,18 @@ export default function ChatPage() {
                   <span>{msg.provider}</span>
                   {msg.ragSources && msg.ragSources.length > 0 && (
                     <span className="text-emerald-400">
-                      · 📚 {msg.ragSources.length} RAG matches from vectors.json
+                      · 📚 {msg.ragSources.length} RAG matches
                     </span>
                   )}
                 </div>
               )}
-              {msg.content || (isStreaming ? "…" : "")}
+              <div>
+                {msg.content
+                  ? renderInlineMarkdown(msg.content)
+                  : isStreaming
+                  ? "…"
+                  : ""}
+              </div>
 
               {msg.ragSources && msg.ragSources.length > 0 && (
                 <details className="mt-2 pt-2 border-t border-slate-800 text-xs text-slate-400">
