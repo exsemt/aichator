@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
         } else if (provider === "local") {
           generator = streamLocalOllama(enrichedMessages, model);
         } else {
-          generator = streamAntigravity(enrichedMessages);
+          generator = streamAntigravity(enrichedMessages, model);
         }
 
         for await (const token of generator) {

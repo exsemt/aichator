@@ -12,7 +12,7 @@ This file provides context, architectural rules, and workflow instructions for a
 1. **Multi-LLM Provider Switching (`src/lib/providers.ts`):**
    - **Local LLM (`local` / Ollama):** Connects to the `aichator-ollama` container (`http://ollama:11434`) supporting compact models (`llama3.2:1b`, `llama3.2:3b`, `qwen2.5:0.5b`) and the custom `aichator` profile built from `knowledge/Modelfile`.
    - **Anthropic Claude (`claude`):** Uses `@anthropic-ai/sdk` with streaming via `ANTHROPIC_API_KEY`.
-   - **Google Antigravity (`antigravity`):** Connects via `ANTIGRAVITY_API_URL` or local `agy` CLI streaming.
+   - **Google Gemini / Antigravity (`antigravity`):** Connects directly to the **Google Gemini Cloud API** with SSE streaming when `GEMINI_API_KEY` is configured (`gemini-4-hydrogen`, `gemini-4-carbon`, `gemini-4-argon`, `gemini-3.8-flash`, `gemini-2.5-flash`), or falls back to `ANTIGRAVITY_API_URL` / local `agy` CLI streaming.
 2. **Minimal File-Based RAG (`src/lib/rag.ts`):**
    - Reads Markdown/Text documents from `knowledge/` (currently configured with domain knowledge for **xsatz.de** – E-Rechnung, XRechnung, ZUGFeRD, tariffs, and validation).
    - Splits documents into semantic chunks, computes embeddings (via Ollama `/api/embed` or deterministic 64D trigram/word vector fallback), and stores them locally in `knowledge/vectors.json`.

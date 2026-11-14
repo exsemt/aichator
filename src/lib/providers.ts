@@ -10,6 +10,8 @@ export interface ChatMessage {
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
 const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5-5";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-4-hydrogen";
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://ollama:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:1b";
 
@@ -51,8 +53,86 @@ export async function* streamClaude(
 }
 
 export async function* streamAntigravity(
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  model?: string
 ): AsyncGenerator<string, void, unknown> {
+  // Option C: Direct Google Gemini Cloud API streaming when GEMINI_API_KEY is configured
+  if (GEMINI_API_KEY) {
+    const targetModel = model || GEMINI_MODEL;
+    const systemText = messages
+      .filter((m) => m.role === "system")
+      .map((m) => m.content)
+      .join("\n\n");
+
+    const contents = messages
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+      targetModel
+    )}:streamGenerateContent?alt=sse&key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(systemText
+            ? { systemInstruction: { parts: [{ text: systemText }] } }
+            : {}),
+          contents,
+        }),
+      });
+
+      if (!res.ok || !res.body) {
+        const errBody = await res.text().catch(() => "");
+        yield `⚠️ Google Gemini API responded with status ${res.status}${
+          errBody ? `: ${errBody.slice(0, 240)}` : ""
+        }`;
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(payload);
+            const parts = parsed?.candidates?.[0]?.content?.parts;
+            if (Array.isArray(parts)) {
+              for (const part of parts) {
+                if (typeof part?.text === "string" && part.text.length > 0) {
+                  yield part.text;
+                }
+              }
+            }
+          } catch {
+            // Ignore malformed SSE lines
+          }
+        }
+      }
+      return;
+    } catch (err) {
+      yield `⚠️ Failed to connect to Google Gemini API: ${String(err)}`;
+      return;
+    }
+  }
+
   const prompt = messages[messages.length - 1]?.content || "";
   const agyEndpoint = process.env.ANTIGRAVITY_API_URL;
 
@@ -61,7 +141,7 @@ export async function* streamAntigravity(
       const res = await fetch(`${agyEndpoint.replace(/\/$/, "")}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify({ messages, model }),
       });
       if (!res.ok || !res.body) {
         yield `⚠️ Antigravity endpoint responded with status ${res.status}.`;
@@ -92,10 +172,10 @@ export async function* streamAntigravity(
     }
 
     if (!hasOutput) {
-      yield "ℹ️ Antigravity mode active. Mount the `agy` CLI inside the container or set `ANTIGRAVITY_API_URL` to your Antigravity agent service.";
+      yield "⚠️ Please set `GEMINI_API_KEY` in your `.env` file (get a free key at https://aistudio.google.com/apikey) or configure `ANTIGRAVITY_API_URL`.";
     }
   } catch {
-    yield "ℹ️ To use Antigravity inside Docker, mount the `agy` binary or configure `ANTIGRAVITY_API_URL` in `docker-compose.yml`.";
+    yield "⚠️ Please set `GEMINI_API_KEY` in your `.env` file (get a free key at https://aistudio.google.com/apikey) and restart Docker Compose to use Google Gemini.";
   }
 }
 

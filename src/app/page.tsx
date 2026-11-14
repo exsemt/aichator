@@ -27,7 +27,7 @@ interface KnowledgeEntryPreview {
 }
 
 const PROVIDERS: { id: ProviderId; label: string; subtitle: string }[] = [
-  { id: "antigravity", label: "Antigravity", subtitle: "Google AGY" },
+  { id: "antigravity", label: "Google Gemini", subtitle: "Gemini / Antigravity" },
   { id: "claude", label: "Claude", subtitle: "Anthropic Cloud" },
   { id: "local", label: "Local LLM (Ollama)", subtitle: "Ollama Container" },
 ];
@@ -63,6 +63,7 @@ export default function ChatPage() {
   const [provider, setProvider] = useState<ProviderId>("local");
   const [localModel, setLocalModel] = useState("aichator");
   const [claudeModel, setClaudeModel] = useState("claude-sonnet-5-5");
+  const [geminiModel, setGeminiModel] = useState("gemini-4-hydrogen");
   const [useRag, setUseRag] = useState<boolean>(true);
   const [showKnowledgePanel, setShowKnowledgePanel] = useState<boolean>(false);
   const [knowledgeEntries, setKnowledgeEntries] = useState<KnowledgeEntryPreview[]>([]);
@@ -169,7 +170,7 @@ export default function ChatPage() {
               ? localModel
               : provider === "claude"
               ? claudeModel
-              : undefined,
+              : geminiModel,
           useRag,
           messages: apiMessages,
         }),
@@ -260,6 +261,21 @@ export default function ChatPage() {
               </button>
             ))}
           </div>
+
+          {/* Google Gemini model selector */}
+          {provider === "antigravity" && (
+            <select
+              value={geminiModel}
+              onChange={(e) => setGeminiModel(e.target.value)}
+              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="gemini-4-hydrogen">Gemini 4 Hydrogen (Fast & Agentic Default)</option>
+              <option value="gemini-4-carbon">Gemini 4 Carbon (Frontier Coding & Reasoning)</option>
+              <option value="gemini-4-argon">Gemini 4 Argon (General Flagship)</option>
+              <option value="gemini-3.8-flash">Gemini 3.8 Flash (Low Latency)</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Legacy)</option>
+            </select>
+          )}
 
           {/* Claude model selector */}
           {provider === "claude" && (
