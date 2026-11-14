@@ -1,12 +1,12 @@
-# AGENTS.md – AI Agent Guide for `aichator`
+# AGENTS.md – AI Agent Guide for AIChator (`aichator`)
 
 This file provides context, architectural rules, and workflow instructions for all AI coding agents working on this repository (**Google Antigravity**, **Claude Code**, **Gemini**, **Cursor**, **Codex**, etc.).
 
 ---
 
-## 1. Project Overview (`aichator`)
+## 1. Project Overview (AIChator / `aichator`)
 
-**`aichator`** is a containerized Full-Stack Multi-LLM Chat & RAG application built with **Next.js 15 (App Router)**, **React 19**, **TypeScript 5.8**, and **Tailwind CSS**, running on **Node 24 (`node:24-alpine`)** and **Ollama** in Docker.
+**AIChator** (`aichator`) is a containerized Full-Stack Multi-LLM Chat & RAG application built with **Next.js 15 (App Router)**, **React 19**, **TypeScript 5.8**, and **Tailwind CSS**, running on **Node 24 (`node:24-alpine`)** and **Ollama** in Docker.
 
 ### Core Capabilities
 1. **Multi-LLM Provider Switching (`src/lib/providers.ts`):**

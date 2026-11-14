@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "aichator – Next.js Multi-LLM & RAG",
-  description: "Multi-LLM chat frontend for Antigravity, Claude, and local LLMs (Ollama) with file-based RAG",
+  title: "AIChator – Next.js Multi-LLM & RAG",
+  description: "AIChator: Multi-LLM chat frontend for Antigravity, Claude, and local LLMs (Ollama) with file-based RAG",
 };
 
 export default function RootLayout({

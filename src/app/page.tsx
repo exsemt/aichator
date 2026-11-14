@@ -179,7 +179,7 @@ export default function ChatPage() {
     <div className="flex flex-col h-screen max-w-5xl mx-auto p-4">
       <header className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800">
         <div>
-          <h1 className="text-xl font-semibold text-white">aichator</h1>
+          <h1 className="text-xl font-semibold text-white">AIChator</h1>
           <p className="text-xs text-slate-400">
             Next.js 15 + TypeScript · Minimal RAG & Ollama in Docker
           </p>

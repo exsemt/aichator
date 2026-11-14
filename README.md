@@ -1,6 +1,6 @@
-# aichator – Next.js 15 + TypeScript + Docker (Multi-LLM & Minimal RAG)
+# AIChator (`aichator`) – Next.js 15 + TypeScript + Docker (Multi-LLM & Minimal RAG)
 
-Full-stack AI chat application built with **Next.js 15 (App Router & TypeScript)** and **React 19** running on **Node 24 Alpine** in **Docker**. Supports seamless switching between **Google Antigravity**, **Anthropic Claude**, and **local LLMs via Ollama**, plus a lightweight file-based **RAG (Retrieval-Augmented Generation)** engine.
+**AIChator** is a full-stack AI chat application built with **Next.js 15 (App Router & TypeScript)** and **React 19** running on **Node 24 Alpine** in **Docker**. Supports seamless switching between **Google Antigravity**, **Anthropic Claude**, and **local LLMs via Ollama**, plus a lightweight file-based **RAG (Retrieval-Augmented Generation)** engine.
 
 ## Project Structure
 - `src/app/page.tsx` – Reactive chat UI with model switcher, real-time token streaming, RAG toggle, and live vector store inspector
