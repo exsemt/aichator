@@ -9,12 +9,13 @@ export interface ChatMessage {
 }
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-3-5-sonnet-latest";
+const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5-5";
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://ollama:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:1b";
 
 export async function* streamClaude(
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  model?: string
 ): AsyncGenerator<string, void, unknown> {
   if (!ANTHROPIC_API_KEY) {
     yield "⚠️ Please set `ANTHROPIC_API_KEY` in your `.env` file or `docker-compose.yml` to use Claude.";
@@ -33,7 +34,7 @@ export async function* streamClaude(
 
   const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
   const stream = await client.messages.stream({
-    model: CLAUDE_MODEL,
+    model: model || CLAUDE_MODEL,
     max_tokens: 2048,
     system: systemMessages || undefined,
     messages: conversationMessages,

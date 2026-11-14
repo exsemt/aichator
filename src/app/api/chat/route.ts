@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
         let generator: AsyncGenerator<string, void, unknown>;
         if (provider === "claude") {
-          generator = streamClaude(enrichedMessages);
+          generator = streamClaude(enrichedMessages, model);
         } else if (provider === "local") {
           generator = streamLocalOllama(enrichedMessages, model);
         } else {

@@ -36,14 +36,19 @@ This file provides context, architectural rules, and workflow instructions for a
 
 ## 3. Mandatory Instructions for AI Agents (Antigravity, Claude, Gemini)
 
-### A. Always Use Context7 for Documentation & Library Lookups
+### A. Strict `.env` Security Rule (Never Read or Modify `.env`)
+- **NEVER read, open, inspect, modify, or commit the `.env` file** (or any `.env.*` secret files).
+- Do not run terminal commands that print environment secrets or inspect `.env`. If environment variable templates need documentation updates, only edit `.env.example`.
+
+### B. Always Use Context7 for Documentation & Library Lookups
 - Whenever you write code, upgrade dependencies, or check APIs for **Next.js 15**, **React 19**, **Anthropic SDK**, **Tailwind CSS**, or **Node.js**, **always use Context7** (`context7` plugin / MCP tools `resolve-library-id` and `query-docs`) first to fetch up-to-date, version-specific documentation instead of relying on outdated training data.
 
-### B. Maintain Modern Runtime & Dependencies
+### C. Maintain Modern Runtime & Dependencies
 - Keep the Docker base image on the current Node version (`node:24-alpine` or newer) and maintain compatibility with **Next.js 15+** and **React 19+**.
+- Default Anthropic Claude model is `claude-sonnet-5-5` (alongside `claude-opus-5-5`, `claude-haiku-5-5`, and `claude-fable-5-2`).
 - Ensure `npm run build` passes strict TypeScript type-checking inside Docker before finalizing changes.
 
-### C. Docker & Ollama Workflow
+### D. Docker & Ollama Workflow
 - Build and start the stack:
   ```bash
   docker compose up --build -d

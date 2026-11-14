@@ -62,6 +62,7 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
 export default function ChatPage() {
   const [provider, setProvider] = useState<ProviderId>("local");
   const [localModel, setLocalModel] = useState("aichator");
+  const [claudeModel, setClaudeModel] = useState("claude-sonnet-5-5");
   const [useRag, setUseRag] = useState<boolean>(true);
   const [showKnowledgePanel, setShowKnowledgePanel] = useState<boolean>(false);
   const [knowledgeEntries, setKnowledgeEntries] = useState<KnowledgeEntryPreview[]>([]);
@@ -163,7 +164,12 @@ export default function ChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider,
-          model: provider === "local" ? localModel : undefined,
+          model:
+            provider === "local"
+              ? localModel
+              : provider === "claude"
+              ? claudeModel
+              : undefined,
           useRag,
           messages: apiMessages,
         }),
@@ -254,6 +260,20 @@ export default function ChatPage() {
               </button>
             ))}
           </div>
+
+          {/* Claude model selector */}
+          {provider === "claude" && (
+            <select
+              value={claudeModel}
+              onChange={(e) => setClaudeModel(e.target.value)}
+              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (Default)</option>
+              <option value="claude-opus-5-5">Claude Opus 5.5 (Agentic & Coding)</option>
+              <option value="claude-haiku-5-5">Claude Haiku 5.5 (Fast)</option>
+              <option value="claude-fable-5-2">Claude Fable 5.2 (Reasoning)</option>
+            </select>
+          )}
 
           {/* Ollama model selector including custom Modelfile profile */}
           {provider === "local" && (
